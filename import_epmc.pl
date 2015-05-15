@@ -3,69 +3,81 @@
 use Catmandu::Sane;
 use Catmandu -load;
 use Catmandu::Importer::JSON;
-use Catmandu::Fix qw/epmc_dblinks/;
-use Getopt::Long;
+use Catmandu::Fix qw(epmc_dblinks);
+use Moo;
+use MooX::Options;
 
-my ($mod,$verbose);
-GetOptions ("mod=s" => \$mod,
-            "verbose"  => \$verbose)
-or die("Error in command line arguments\n");
+option source => (
+  is => 'ro',
+  short => 's',
+  default => sub { 'citations' },
+  doc => "Possible values are 'citations', 'references' or 'dblinks'.",
+);
+option verbose => (
+  is => 'ro',
+  short => 'v',
+  doc => 'Print details',
+);
 
-Catmandu->load(':up');
-
-my $bag = Catmandu->store('metrics')->bag("epmc_$mod");
-my $imp = Catmandu::Importer::JSON->new(file => "$mod.json");
+Catmandu->load;
+Catmandu->config;
 
 my $rec;
 
 sub _cit_ref {
-    my $item = shift;
+  my ($self, $item) = @_;
 
-    my $pmid = $item->{request}->{id};
-    $rec->{$pmid}->{_id} = $pmid;
-    $rec->{$pmid}->{total} = $item->{hitCount};
+  my $source = $self->source;
+  my $pmid = $item->{request}->{id};
+  $rec->{$pmid}->{_id} = $pmid;
+  $rec->{$pmid}->{total} = $item->{hitCount};
 
-    my $entries;
-    if ($mod eq 'citations') {
-        $entries = $item->{citationList}->{citation};
-    } elsif ($mod eq 'references') {
-        $entries = $item->{referenceList}->{reference};
-    }
-
-    foreach my $e (@{$entries}) {
-        push @{$rec->{$pmid}->{entries}}, $e;
-    }
+  if ($source eq 'citations') {
+    $rec->{$pmid}->{entries} = $item->{citationList}->{citation};
+  } elsif ($source eq 'references') {
+    $rec->{$pmid}->{entries} = $item->{referenceList}->{reference};
+  }
 
 }
 
 sub _dblinks {
-    my $item = shift;
+  my ($self, $item) = @_;
 
-    my $pmid = $item->{request}->{id};
-    my $db_item = $item->{dbCrossReferenceList}->{dbCrossReference}->[0];
-    my $db_name = $db_item->{dbName};
+  my $pmid = $item->{request}->{id};
+  my $db_item = $item->{dbCrossReferenceList}->{dbCrossReference}->[0];
+  my $db_name = $db_item->{dbName};
 
-    my $db_fixer = Catmandu::Fix->new(fixes => ["epmc_dblinks($db_name)"]);
-    my $fixed_db = $db_fixer->fix($db_item);
+  my $db_fixer = Catmandu::Fix->new(fixes => ["epmc_dblinks($db_name)"]);
+  my $fixed_db = $db_fixer->fix($db_item);
 
-    $rec->{$pmid}->{_id} = $pmid;
-    $rec->{$pmid}->{db}->{$db_name}->{total} = $db_item->{dbCount};
-    $rec->{$pmid}->{db}->{$db_name}->{entries} = $fixed_db;
+  $rec->{$pmid}->{_id} = $pmid;
+  $rec->{$pmid}->{db}->{$db_name}->{total} = $db_item->{dbCount};
+  $rec->{$pmid}->{db}->{$db_name}->{entries} = $fixed_db;
 
 }
 
-# main
-$imp->each(sub{
+sub run {
+  my ($self) = @_;
+
+  my $source = $self->source;
+
+  my $imp = Catmandu->importer('default', file => "$source.json");
+
+  $imp->each(sub{
     my $item = $_[0];
     next if $item->{errMsg};
 
-    if ($mod eq 'citations' or $mod eq 'references') {
-        _cit_ref($item);
-    } elsif ($mod eq 'dblinks') {
-        _dblinks($item);
+    if ($source eq 'citations' or $source eq 'references') {
+      $self->_cit_ref($item);
+    } elsif ($source eq 'dblinks') {
+      $self->_dblinks($item);
     }
-});
+  });
 
-foreach my $k (keys %$rec) {
-    $bag->add($rec->{$k});
+  my $bag = Catmandu->store->bag("epmc_$source");
+  map { $bag->add($rec->{$_}); } keys %$rec;
 }
+
+main->new_with_options->run;
+
+1;

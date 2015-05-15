@@ -1,0 +1,14 @@
+store:
+  default:
+    package: CHI
+    options:
+      driver: File
+      root_dir: './data'
+importer:
+  default:
+    package: JSON
+  csv:
+    package: CSV
+exporter:
+  default:
+    package: JSON
