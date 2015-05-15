@@ -1,0 +1,17 @@
+blib/
+.build/
+_build/
+cover_db/
+inc/
+Build
+!Build/
+Makefile.old
+MANIFEST.bak
+META.yml
+MYMETA.yml
+nytprof.out
+pm_to_blib
+*.log
+*.swp
+*.json
+data/*
