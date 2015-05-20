@@ -1,15 +1,15 @@
 PROG=perl fetch_epmc.pl
 
-go: pub.json
+initial:
 	$(PROG) --initial
 
-citations: epmc.json
+citations:
 	$(PROG) --source citations
 
-references: epmc.json
+references:
 	$(PROG) --source references
 
-dblinks: epmc.json
+dblinks:
 	$(PROG) --source dblinks
 
 .PHONY: clean
