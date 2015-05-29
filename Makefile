@@ -3,16 +3,19 @@ PROG=perl fetch_epmc.pl
 initial:
 	$(PROG) --initial
 
-citations:
+citations: epmc.json
 	$(PROG) --source citations
 
-references:
+references: epmc.json
 	$(PROG) --source references
 
-dblinks:
+dblinks: epmc.json
 	$(PROG) --source dblinks
+
+epmc.json: pmid.csv
+	$(PROG) --initial
 
 .PHONY: clean
 
 clean:
-	rm *.json && rm *.log
+	rm -f *.json && rm -f *.log
