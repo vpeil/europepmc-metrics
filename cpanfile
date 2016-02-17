@@ -7,5 +7,6 @@ on test {
 
 requires 'Catmandu';
 requires 'Catmandu::Importer::getJSON';
+requires 'Moo';
 requires 'MooX::Options';
 requires 'Try::Tiny'

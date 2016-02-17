@@ -1,0 +1,4 @@
+select all_match(status,public)
+select exists(external_id.pmid)
+move_field(external_id.pmid,pmid)
+retain_field(pmid)

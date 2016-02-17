@@ -1,19 +1,23 @@
 # europepmc-metrics
 
 A small project to fetch and store citations, references and database links
-from http://europepmc.org.
+from [Europe PMC](https://europepmc.org.)
 
 ## Installation
 
-Make sure all the dependencies are installed:
+Make sure all the dependencies are installed
 
 ```bash
+$ make install
+
+# or equivalently
+
 $ cpanm --installdeps .
 ```
 
 ## Usage
 
-You need a file called `pmid.csv` which looks like
+You need a CSV file with header  `data/pmid.csv` which looks like
 ```csv
 pmid
 12345678
@@ -21,24 +25,27 @@ pmid
 98765433
 ```
 
-Run the following command
-
-```bash
-$ perl fetch_epmc.pl --initial
-```
-
-to fetch the initial data from Europe PMC. Then you may specify the source to be fetched, e.g. `citations`
-
-```bash
-$ perl fetch_epmc.pl -s citations
-```
-
 Run
-
 ```bash
-$ perl fetch_epmc.pl --help
+$ make
 ```
 
-to display more options.
+to fetch the initial data from Europe PMC.
 
-There's also a tiny `Makefile` as a wrapper for the fetch_epmc.pl script.
+Then you may specify the source to be fetched, e.g. `citations`, `references` or `dblinks`
+```bash
+$ make citations
+
+# or
+
+$ make references
+
+# or
+
+$make dblinks
+```
+
+To import the data into a database run
+```bash
+$ make import
+```
