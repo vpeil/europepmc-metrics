@@ -8,27 +8,25 @@ start: data/pmid.csv
 
 citations: data/epmc.json
 	$(PROG) --source citations
+	$(IMP) --source citations
 
 references: data/epmc.json
 	$(PROG) --source references
+	$(IMP) --source references
 
 dblinks: data/epmc.json
 	$(PROG) --source dblinks
+	$(IMP) --source dblinks
 
-epmc.json: data/pmid.csv
+data/epmc.json: data/pmid.csv
 	$(PROG) --initial
 
 data/pmid.csv:
 	catmandu -L /srv/www/pub export backup --bag publication \
 	to CSV --fix export.fix --fields 'pmid' > data/pmid.csv
 
-import: data/citations.json data/referneces.json data/dblinks.json
-	$(IMP) --source citations
-	$(IMP) --source references
-	$(IMP) --source dblinks
-
 install:
 	cpanm --installdeps .
 
 clean:
-	rm -f *.json && rm -f *.log
+	rm -f data/*

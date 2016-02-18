@@ -1,8 +1,7 @@
 #!/usr/bin/env perl
 
 use Catmandu::Sane;
-use Catmandu -load;
-use Catmandu::Importer::JSON;
+use Catmandu;
 use Catmandu::Fix qw(epmc_dblinks);
 use Moo;
 use MooX::Options;
@@ -10,6 +9,7 @@ use MooX::Options;
 option source => (
     is => 'ro',
     short => 's',
+    format => 's',
     default => sub { 'citations' },
     doc => "Possible values are 'citations', 'references' or 'dblinks'.",
 );
@@ -60,15 +60,15 @@ sub run {
 
     my $source = $self->source;
 
-    my $imp = Catmandu->importer('default', file => "$source.json")->each(sub{
+    my $imp = Catmandu::Importer::JSON->importer('default',  file => "data/$source.json")->each(sub{
         my $item = $_[0];
 
-        next if $item->{errMsg};
-
-        if ($source eq 'citations' or $source eq 'references') {
-            $self->_cit_ref($item);
-        } elsif ($source eq 'dblinks') {
-            $self->_dblinks($item);
+        unless ($item->{errMsg}) {
+            if ($source eq 'citations' or $source eq 'references') {
+                $self->_cit_ref($item);
+            } elsif ($source eq 'dblinks') {
+                $self->_dblinks($item);
+            }
         }
     });
 
