@@ -60,7 +60,7 @@ sub run {
 
     my $source = $self->source;
 
-    my $imp = Catmandu::Importer::JSON->importer('default',  file => "data/$source.json")->each(sub{
+    my $imp = Catmandu->importer('default',  file => "data/$source.json")->each(sub{
         my $item = $_[0];
 
         unless ($item->{errMsg}) {
