@@ -88,32 +88,33 @@ sub _fetch_source {
             $go = (lc $input->{hasDbCrossReferences} eq 'y') ? 1 : 0;
         }
 
-        next unless $go;
-        my $pages = 1;
+        if ($go) {
+            my $pages = 1;
 
-        print "Fetch $source for $input->{id}\n" if $v;
+            print "Fetch $source for $input->{id}\n" if $v;
 
-        if ($source eq 'dblinks') {
-            my $dbs = $input->{dbCrossReferenceList}->{dbName};
-            foreach my $db (@{$dbs}) {
-                Catmandu::Importer::getJSON->new(
-                    from => "http://www.ebi.ac.uk/europepmc/webservices/rest/MED/$input->{id}/databaseLinks/$db/1/json"
-                )->each(sub{
-                    my ($record) = @_;
-                    $exporter->add($record);
-                });
-            }
-        } else {
-            my $p = 1;
-            while ($p <= $pages) {
-                Catmandu::Importer::getJSON->new(
-                    from => "http://www.ebi.ac.uk/europepmc/webservices/rest/MED/$input->{id}/$source/$p/json"
-                )->each(sub {
-                    my ($record) = @_;
-                    $pages = ceil ($record->{hitCount}/25) if $p == 1;
-                    $exporter->add($record);
-                });
-                $p++;
+            if ($source eq 'dblinks') {
+                my $dbs = $input->{dbCrossReferenceList}->{dbName};
+                foreach my $db (@{$dbs}) {
+                    Catmandu::Importer::getJSON->new(
+                        from => "http://www.ebi.ac.uk/europepmc/webservices/rest/MED/$input->{id}/databaseLinks/$db/1/json"
+                    )->each(sub{
+                        my ($record) = @_;
+                        $exporter->add($record);
+                    });
+                }
+            } else {
+                my $p = 1;
+                while ($p <= $pages) {
+                    Catmandu::Importer::getJSON->new(
+                        from => "http://www.ebi.ac.uk/europepmc/webservices/rest/MED/$input->{id}/$source/$p/json"
+                    )->each(sub {
+                        my ($record) = @_;
+                        $pages = ceil ($record->{hitCount}/25) if $p == 1;
+                        $exporter->add($record);
+                    });
+                    $p++;
+                }
             }
         }
 
